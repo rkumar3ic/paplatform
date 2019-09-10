@@ -42,6 +42,9 @@ public class PaEventProcessor implements Runnable {
 			ReportRequestEvent requestEvent = (ReportRequestEvent) event;
 			notif.setCurrentReportStage(requestEvent.getCurrentReportStage());
 			notif.setEventId(1);
+			if(null != requestEvent.getRequestedOnBehalf()){
+				notif.setEventId(6);
+			}
 			notif.getMergeCodesMap().put(MergeCodes.NEWSTATUS.description(), ReportStageLKP.getReportStage(notif.getCurrentReportStage()).replaceAll("_", " "));
 			
 			
