@@ -50,7 +50,11 @@ public class NotificationEngine {
 				logger.info("loggedin user is a admin");
 				notif.setRole("admin");
 				notif.getMergeCodesMap().put(MergeCodes.REPORTNAME.description(),report.getName());
-				UserDetails clientDetails = getUserDetails(0,report.getCreatedBy(),0).get(0);
+				UserDetails clientDetails = null;
+				if(null != report.getRequestedOnBehalf()){
+					clientDetails = getUserDetails(0,report.getRequestedOnBehalf(),0).get(0);
+				}
+				clientDetails = getUserDetails(0,report.getCreatedBy(),0).get(0);
 				notif.setEmailAddress(clientDetails.getEmail());
 				notif.getMergeCodesMap().put(MergeCodes.ADMINUSERNAME.description(), userDetails.getUserName());
 				notif.getMergeCodesMap().put(MergeCodes.CLIENTUSERNAME.description(), clientDetails.getUserName());

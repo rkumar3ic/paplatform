@@ -15,6 +15,7 @@ public class Report {
 	private String createdBy;
 	private Date lastUpdated;
 	private String lastUpdatedBy;
+	private String requestedOnBehalf;
 	
 	public int getId() {
 		return id;
@@ -81,6 +82,12 @@ public class Report {
 	}
 	public void setLastUpdatedBy(String lastUpdatedBy) {
 		this.lastUpdatedBy = lastUpdatedBy;
+	}
+	public String getRequestedOnBehalf() {
+		return requestedOnBehalf;
+	}
+	public void setRequestedOnBehalf(String requestedOnBehalf) {
+		this.requestedOnBehalf = requestedOnBehalf;
 	}
 	
 	

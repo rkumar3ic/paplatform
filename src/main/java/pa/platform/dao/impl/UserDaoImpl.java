@@ -61,7 +61,7 @@ public class UserDaoImpl implements UserDao{
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		String query="select UserName,FirstName,LastName,Title,Phone,Email,ClientId,TimeZone from User where UserName = ?";
+		String query="select UserName,FirstName,LastName,Title,Phone,Email,ClientId,TimeZone from UserManagement.dbo.[User] where UserName = ?";
 		UserDetails userDetails = null;	
 		try{
 			connection = DaoManager.getConnection();
