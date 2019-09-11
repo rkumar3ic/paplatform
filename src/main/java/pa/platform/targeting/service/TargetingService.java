@@ -17,6 +17,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
 import pa.platform.core.DaoManager;
+import pa.platform.core.PaConfiguration;
+import pa.platform.core.PaConstants;
 import pa.platform.event.PaNotificationEvent;
 import pa.platform.process.PaService;
 import pa.platform.queue.impl.QueuePublisherImpl;
@@ -74,9 +76,9 @@ public class TargetingService extends PaService{
 	public void startService() {
 		try {
 			//get queuenames brandwise and their corresponding thread sizes
-			//fetchPaQueuesFromDB();		
-			//String queueNamesStr = PaConfiguration.getInstance().getConfiguration(PaConstants.QUEUE_NAME);
-			String[] queueNames = {"nagarjuna-event-1036"};//(String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
+			fetchPaQueuesFromDB();		
+			String queueNamesStr = PaConfiguration.getInstance().getConfiguration(PaConstants.QUEUE_NAME);
+			String[] queueNames = (String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
 			paExecutorMap.put(1036, Executors.newFixedThreadPool(10));
 			for(String queueName : queueNames){
 				if(queueName != null && queueName.trim().length() > 0){
