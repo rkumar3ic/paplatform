@@ -30,6 +30,7 @@ public class ReportDaoImpl implements ReportDao{
 				report.setCreatedBy(rs.getString("CreatedBy"));
 				report.setStage(rs.getInt("Stage"));
 				report.setType(rs.getInt("Type"));
+				report.setRequestedOnBehalf(rs.getString("RequestedOnBehalf"));
 			}
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage(), ex.fillInStackTrace());

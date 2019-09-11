@@ -74,9 +74,10 @@ public class TargetingService extends PaService{
 	public void startService() {
 		try {
 			//get queuenames brandwise and their corresponding thread sizes
-			fetchPaQueuesFromDB();		
+			//fetchPaQueuesFromDB();		
 			//String queueNamesStr = PaConfiguration.getInstance().getConfiguration(PaConstants.QUEUE_NAME);
-			String[] queueNames = (String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
+			String[] queueNames = {"nagarjuna-event-1036"};//(String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
+			paExecutorMap.put(1036, Executors.newFixedThreadPool(10));
 			for(String queueName : queueNames){
 				if(queueName != null && queueName.trim().length() > 0){
 					QueuePublisherImpl queue = new QueuePublisherImpl();
