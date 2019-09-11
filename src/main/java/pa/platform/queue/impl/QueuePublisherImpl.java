@@ -100,7 +100,7 @@ public class QueuePublisherImpl implements QueuePublisher {
 	private List<PaNotificationEvent> getEventsFromQueueMethod(int numberOfMessages){
 
 		List<PaNotificationEvent> events = new ArrayList<PaNotificationEvent>();
-		Messages messages = new Messages();
+		//Messages messages = new Messages();
 		try {
 			for (CloudQueueMessage message : queue.retrieveMessages(numberOfMessages, 30, null, null)) {
 				logger.debug(message.getMessageContentAsString());
@@ -108,29 +108,29 @@ public class QueuePublisherImpl implements QueuePublisher {
 					JSONObject tempobj = new JSONObject(message.getMessageContentAsString());
 					PaNotificationEvent event = null;
 					String action = null;
-					if(tempobj.has(messages.getString("ACTION"))){
-					action = tempobj.getString(messages.getString("ACTION"));
+					if(tempobj.has("action")){
+					action = tempobj.getString("action");
 					}else{
 						logger.info("Incoming json do not have valid Action");
 						continue;
 					}
 					int brandId = 0;
-					if(tempobj.has(messages.getString("BRANDID"))){
-						brandId = tempobj.getInt(messages.getString("BRANDID"));
+					if(tempobj.has("brandid")){
+						brandId = tempobj.getInt("brandid");
 					}
 					
 					if (action.equalsIgnoreCase("REPORTREQUESTEVENT")) {
-						event = new ReportRequestEvent(action, brandId, tempobj.getInt(messages.getString("REPORTID")),
-								tempobj.getInt(messages.getString("CURRENTREPORTSTAGE")), tempobj.getInt(messages.getString("REPORTTYPE")), tempobj.getInt(messages.getString("USERID")),tempobj.getString(messages.getString("USERNAME")),
-								tempobj.getString(messages.getString("REQUESTEDONBEHALF")));
+						event = new ReportRequestEvent(action, brandId, tempobj.getInt("reportid"),
+								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),
+								tempobj.getString("requestedOnBehalf"));
 					}
 					if (action.equalsIgnoreCase("REPORTCOMMENTEVENT")) {
-						event = new ReportCommentEvent(action, brandId, tempobj.getInt(messages.getString("REPORTID")),
-								tempobj.getInt(messages.getString("CURRENTREPORTSTAGE")), tempobj.getInt(messages.getString("REPORTTYPE")), tempobj.getInt(messages.getString("USERID")),tempobj.getString(messages.getString("USERNAME")));
+						event = new ReportCommentEvent(action, brandId, tempobj.getInt("reportid"),
+								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"));
 					}
 					if (action.equalsIgnoreCase("REPORTSTATUSEVENT")) {
-						event = new ReportStatusEvent(action, brandId, tempobj.getInt(messages.getString("REPORTID")),
-								tempobj.getInt(messages.getString("CURRENTREPORTSTAGE")), tempobj.getInt(messages.getString("REPORTTYPE")), tempobj.getInt(messages.getString("USERID")),tempobj.getString(messages.getString("USERNAME")),tempobj.getInt(messages.getString("NEWREPORTSTAGE")));
+						event = new ReportStatusEvent(action, brandId, tempobj.getInt("reportid"),
+								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),tempobj.getInt("newreportstage"));
 					}
 					if (event != null){
 						events.add(event);
