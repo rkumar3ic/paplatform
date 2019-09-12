@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import pa.platform.core.PaConfiguration;
 import pa.platform.core.enums.MergeCodes;
 import pa.platform.dao.impl.ReportDaoImpl;
 import pa.platform.dao.impl.ReportEventNotificationDaoImpl;
@@ -234,7 +235,8 @@ public class NotificationEngine {
 	}
 	
 	private String getApplicationURL(Notification notif){
-		String appURL = "https://" +"loginqa.fishbowl.com" + "/#/reports/details/"+notif.getReportId();
+		String envSpecificURL = PaConfiguration.getInstance().getConfiguration("app_domain");
+		String appURL = "https://" +envSpecificURL + "/#/reports/details/"+notif.getReportId();
 		logger.info("Application URL : "+appURL);
 		return appURL;
 	}
