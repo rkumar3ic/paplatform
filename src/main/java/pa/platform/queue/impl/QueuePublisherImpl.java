@@ -118,11 +118,15 @@ public class QueuePublisherImpl implements QueuePublisher {
 					if(tempobj.has("brandid")){
 						brandId = tempobj.getInt("brandid");
 					}
+					String requestedOnBehalf = null;
+					if(tempobj.has("requestedOnBehalf")){
+						requestedOnBehalf = tempobj.getString("requestedOnBehalf");
+					}
 					
 					if (action.equalsIgnoreCase("REPORTREQUESTEVENT")) {
 						event = new ReportRequestEvent(action, brandId, tempobj.getInt("reportid"),
 								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),
-								tempobj.getString("requestedOnBehalf"));
+								requestedOnBehalf);
 					}
 					if (action.equalsIgnoreCase("REPORTCOMMENTEVENT")) {
 						event = new ReportCommentEvent(action, brandId, tempobj.getInt("reportid"),
