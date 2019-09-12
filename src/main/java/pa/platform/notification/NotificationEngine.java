@@ -53,8 +53,9 @@ public class NotificationEngine {
 				UserDetails clientDetails = null;
 				if(null != report.getRequestedOnBehalf()){
 					clientDetails = getUserDetails(0,report.getRequestedOnBehalf(),0).get(0);
+				}else{
+					clientDetails = getUserDetails(0,report.getCreatedBy(),0).get(0);
 				}
-				clientDetails = getUserDetails(0,report.getCreatedBy(),0).get(0);
 				notif.setEmailAddress(clientDetails.getEmail());
 				notif.getMergeCodesMap().put(MergeCodes.ADMINUSERNAME.description(), userDetails.getUserName());
 				notif.getMergeCodesMap().put(MergeCodes.CLIENTUSERNAME.description(), clientDetails.getUserName());
