@@ -16,9 +16,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
+import fb.auditTrail.event.AuditEvent;
+import fb.auditTrail.processor.AuditEventProcessor;
 import pa.platform.core.DaoManager;
 import pa.platform.core.PaConfiguration;
 import pa.platform.core.PaConstants;
+import pa.platform.event.PaEvent;
 import pa.platform.event.PaNotificationEvent;
 import pa.platform.process.PaService;
 import pa.platform.queue.impl.QueuePublisherImpl;
@@ -48,16 +51,18 @@ public class TargetingService extends PaService{
 		for(QueuePublisherImpl queue : queues){
 			try {
 				
-				List<PaNotificationEvent> events = queue.getEventsFromQueue(numberOfQueuesToProcess);
+				List<PaEvent> events = queue.getEventsFromQueue(numberOfQueuesToProcess);
 
 				if (events.size() > 0) {
 					logger.info("Reading " + events.size() + " Events from queue!!");
-					for (PaNotificationEvent event : events) {
+					for (PaEvent event : events) {
 						if (event != null) {
 							if (event instanceof PaNotificationEvent) {
 								logger.debug("Processing Loyalty Event Now ...");
 								paExecutorMap.get(event.getBrandId()).submit(new PaEventProcessor(event));
-								
+							}else if(event instanceof AuditEvent){
+								logger.debug("Processing Audit Event Now ...");
+								paExecutorMap.get(event.getBrandId()).submit(new AuditEventProcessor(event));
 							}
 							
 						}
@@ -78,6 +83,8 @@ public class TargetingService extends PaService{
 			//get queuenames brandwise and their corresponding thread sizes
 			fetchPaQueuesFromDB();		
 	
+			//String[] queueNames = {"riteesh-1036"}; //For running in local
+			//paExecutorMap.put(1036, Executors.newFixedThreadPool(10)); //For running in local
 			String[] queueNames = (String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
 
 			for(String queueName : queueNames){
@@ -86,9 +93,11 @@ public class TargetingService extends PaService{
 					queues.add(queue);
 					String queueurl = queue.createQueue(queueName);
 					logger.info("Servicing queue: " + queueurl);
+				
 					/*queue.sendEventToQueue("{\"action\":\"reportrequestevent\",\"brandid\":\"1036\",\"reportid\":\"256\",\"currentreportstage\":\"6\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\"}");
 					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
-					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");*/
+					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
+				*/
 				}
 			}
 		

@@ -1,15 +1,18 @@
 package pa.platform.event;
 
-public class PaNotificationEvent {
+public class PaNotificationEvent extends PaEvent{
 
 	public int outCount = 1;
-	public int brandId;
+	//public int brandId;
 	private Integer reportId;
 	private Integer reportType;
 	private Integer userId;
 	private String userName;
-
 	
+	public PaNotificationEvent() {
+		super();
+	}
+
 	public PaNotificationEvent(int brandId,int reportId,int reportType,int userId,String userName) {
 		super();
 		this.brandId = brandId;

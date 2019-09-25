@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import pa.platform.core.PaConfiguration;
 import pa.platform.core.PaConstants;
+import pa.platform.event.PaEvent;
 import pa.platform.event.PaNotificationEvent;
 import pa.platform.event.ReportCommentEvent;
 import pa.platform.event.ReportRequestEvent;
@@ -22,6 +23,12 @@ import pa.platform.queue.QueuePublisher;
 
 
 
+
+
+
+
+
+import com.google.gson.Gson;
 /*import org.codehaus.jackson.map.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,6 +41,9 @@ import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.queue.CloudQueue;
 import com.microsoft.azure.storage.queue.CloudQueueClient;
 import com.microsoft.azure.storage.queue.CloudQueueMessage;
+
+import fb.auditTrail.event.AuditEvent;
+import fb.auditTrail.model.AuditTrail;
 
 
 
@@ -97,16 +107,17 @@ public class QueuePublisherImpl implements QueuePublisher {
 		}
 	}
 	
-	private List<PaNotificationEvent> getEventsFromQueueMethod(int numberOfMessages){
+	private List<PaEvent> getEventsFromQueueMethod(int numberOfMessages){
 
-		List<PaNotificationEvent> events = new ArrayList<PaNotificationEvent>();
+		List<PaEvent> events = new ArrayList<PaEvent>();
 		//Messages messages = new Messages();
 		try {
 			for (CloudQueueMessage message : queue.retrieveMessages(numberOfMessages, 30, null, null)) {
 				logger.debug(message.getMessageContentAsString());
 				try {
 					JSONObject tempobj = new JSONObject(message.getMessageContentAsString());
-					PaNotificationEvent event = null;
+					PaEvent event = null;
+					AuditEvent auditEvent = null;
 					String action = null;
 					if(tempobj.has("action")){
 					action = tempobj.getString("action");
@@ -117,12 +128,13 @@ public class QueuePublisherImpl implements QueuePublisher {
 					int brandId = 0;
 					if(tempobj.has("brandid")){
 						brandId = tempobj.getInt("brandid");
+					}else if(tempobj.has("brandId")){
+						brandId = tempobj.getInt("brandId");
 					}
 					String requestedOnBehalf = null;
 					if(tempobj.has("requestedOnBehalf")){
 						requestedOnBehalf = tempobj.getString("requestedOnBehalf");
 					}
-					
 					if (action.equalsIgnoreCase("REPORTREQUESTEVENT")) {
 						event = new ReportRequestEvent(action, brandId, tempobj.getInt("reportid"),
 								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),
@@ -135,6 +147,14 @@ public class QueuePublisherImpl implements QueuePublisher {
 					if (action.equalsIgnoreCase("REPORTSTATUSEVENT")) {
 						event = new ReportStatusEvent(action, brandId, tempobj.getInt("reportid"),
 								tempobj.getInt("currentreportstage"), tempobj.getInt("reporttype"), tempobj.getInt("userid"),tempobj.getString("username"),tempobj.getInt("newreportstage"));
+					}
+					if (action.equalsIgnoreCase("AUDITEVENT")) {
+						Gson gson = new Gson();
+						JSONObject data = tempobj.getJSONObject("auditTrail");
+						System.out.println(data);
+						AuditTrail auditTrail = gson.fromJson(data.toString(), AuditTrail.class);
+						System.out.println(auditTrail);
+						event = new AuditEvent(action, brandId, auditTrail);
 					}
 					if (event != null){
 						events.add(event);
@@ -157,7 +177,7 @@ public class QueuePublisherImpl implements QueuePublisher {
 	}
 
 	@Override
-	public List<PaNotificationEvent> getEventsFromQueue() {
+	public List<PaEvent> getEventsFromQueue() {
 		return this.getEventsFromQueueMethod(1);
 	}
 
@@ -174,7 +194,7 @@ public class QueuePublisherImpl implements QueuePublisher {
 
 	
 	@Override
-	public List<PaNotificationEvent> getEventsFromQueue(int numberOfMessages) {
+	public List<PaEvent> getEventsFromQueue(int numberOfMessages) {
 		return this.getEventsFromQueueMethod(numberOfMessages);
 	}
 
