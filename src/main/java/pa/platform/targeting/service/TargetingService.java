@@ -34,7 +34,9 @@ public class TargetingService extends PaService{
 	private static Logger logger = Logger.getLogger(TargetingService.class);
 	
 	public static final Map<Integer, ExecutorService> paExecutorMap = new HashMap<Integer, ExecutorService>();
+	public static final Map<Integer, ExecutorService> auditExecutorMap = new HashMap<Integer, ExecutorService>();
 	public static final List<String> paQueueNames = new ArrayList<String>();
+	public static final List<String> auditQueueNames = new ArrayList<String>();
 	
 	
 	
@@ -62,7 +64,7 @@ public class TargetingService extends PaService{
 								paExecutorMap.get(event.getBrandId()).submit(new PaEventProcessor(event));
 							}else if(event instanceof AuditEvent){
 								logger.debug("Processing Audit Event Now ...");
-								paExecutorMap.get(event.getBrandId()).submit(new AuditEventProcessor(event));
+								auditExecutorMap.get(event.getBrandId()).submit(new AuditEventProcessor(event));
 							}
 							
 						}
@@ -81,11 +83,15 @@ public class TargetingService extends PaService{
 	public void startService() {
 		try {
 			//get queuenames brandwise and their corresponding thread sizes
-			fetchPaQueuesFromDB();		
+			fetchPaQueuesFromDB();
+			fetchAuditQueuesFromDB();
 	
 			//String[] queueNames = {"riteesh-1036"}; //For running in local
 			//paExecutorMap.put(1036, Executors.newFixedThreadPool(10)); //For running in local
-			String[] queueNames = (String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
+			//String[] queueNames = (String[]) paQueueNames.toArray(new String[paQueueNames.size()]);
+			List<String> queueNames = new ArrayList<String>();
+			queueNames.addAll(paQueueNames);
+			queueNames.addAll(auditQueueNames);
 
 			for(String queueName : queueNames){
 				if(queueName != null && queueName.trim().length() > 0){
@@ -94,10 +100,10 @@ public class TargetingService extends PaService{
 					String queueurl = queue.createQueue(queueName);
 					logger.info("Servicing queue: " + queueurl);
 				
-					/*queue.sendEventToQueue("{\"action\":\"reportrequestevent\",\"brandid\":\"1036\",\"reportid\":\"256\",\"currentreportstage\":\"6\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\"}");
-					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
-					queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
-				*/
+					//queue.sendEventToQueue("{\"action\":\"reportrequestevent\",\"brandid\":\"1036\",\"reportid\":\"256\",\"currentreportstage\":\"6\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\"}");
+					//queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
+					//queue.sendEventToQueue("{\"action\":\"reportstatusevent\",\"brandid\":\"1036\",\"reportid\":\"252\",\"currentreportstage\":\"1\",\"reporttype\":\"3\",\"userid\":\"39908\",\"username\":\"abhinavAU\",\"newreportstage\":\"2\"}");
+				
 				}
 			}
 		
@@ -111,7 +117,7 @@ public class TargetingService extends PaService{
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		String query="SELECT BrandId,NumberOfThreads,QueueName FROM PricingAnalytics.dbo.Queues where Deleted = 0";
+		String query="SELECT BrandId,NumberOfThreads,QueueName FROM PricingAnalytics.dbo.Queues where Deleted = 0 and QueueType = 'PA'";
 		try{
 			connection = DaoManager.getConnection();
 			preparedStatement = connection.prepareStatement(query);
@@ -125,6 +131,34 @@ public class TargetingService extends PaService{
 					paExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
 				}
 				paQueueNames.add(rs.getString("QueueName"));
+			}
+		}catch(Exception ex){
+			throw new RuntimeException(ex.getMessage(), ex.fillInStackTrace());
+		}finally {
+			DaoManager.close(rs);
+			DaoManager.close(preparedStatement);
+			DaoManager.close(connection);
+		}
+	}
+	
+	private void fetchAuditQueuesFromDB(){
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet rs = null;
+		String query="SELECT BrandId,NumberOfThreads,QueueName FROM PricingAnalytics.dbo.Queues where Deleted = 0 and QueueType = 'AT'";
+		try{
+			connection = DaoManager.getConnection();
+			preparedStatement = connection.prepareStatement(query);
+			logger.info(preparedStatement.toString());
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				Integer brandId = rs.getInt("BrandId");
+				Integer noOfThreads = rs.getInt("NumberOfThreads");
+				String queueName = "audit_queue_"+brandId;
+				if(!auditExecutorMap.containsKey(queueName)){
+					auditExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
+				}
+				auditQueueNames.add(rs.getString("QueueName"));
 			}
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage(), ex.fillInStackTrace());
