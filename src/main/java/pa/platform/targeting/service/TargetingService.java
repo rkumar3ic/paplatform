@@ -84,7 +84,6 @@ public class TargetingService extends PaService{
 		try {
 			//get queuenames brandwise and their corresponding thread sizes
 			fetchPaQueuesFromDB();
-			fetchAuditQueuesFromDB();
 	
 			//String[] queueNames = {"riteesh-1036"}; //For running in local
 			//paExecutorMap.put(1036, Executors.newFixedThreadPool(10)); //For running in local
@@ -117,7 +116,8 @@ public class TargetingService extends PaService{
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		ResultSet rs = null;
-		String query="SELECT BrandId,NumberOfThreads,QueueName FROM PricingAnalytics.dbo.Queues where Deleted = 0 and QueueType = 'PA'";
+		String queueName = null;
+		String query="SELECT BrandId,NumberOfThreads,QueueName,QueueType FROM PricingAnalytics.dbo.Queues where Deleted = 0";
 		try{
 			connection = DaoManager.getConnection();
 			preparedStatement = connection.prepareStatement(query);
@@ -126,11 +126,19 @@ public class TargetingService extends PaService{
 			while (rs.next()) {
 				Integer brandId = rs.getInt("BrandId");
 				Integer noOfThreads = rs.getInt("NumberOfThreads");
-				String queueName = "paqueue_notification_"+brandId;
-				if(!paExecutorMap.containsKey(queueName)){
-					paExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
+				if("PA".equalsIgnoreCase(rs.getString("QueueType"))){
+					queueName = "paqueue-notification-"+brandId;
+					if(!paExecutorMap.containsKey(queueName)){
+						paExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
+					}
+					paQueueNames.add(rs.getString("QueueName"));
+				}else if("AT".equalsIgnoreCase(rs.getString("QueueType"))){
+					queueName = "audit-queue-"+brandId;
+					if(!auditExecutorMap.containsKey(queueName)){
+						auditExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
+					}
+					auditQueueNames.add(rs.getString("QueueName"));
 				}
-				paQueueNames.add(rs.getString("QueueName"));
 			}
 		}catch(Exception ex){
 			throw new RuntimeException(ex.getMessage(), ex.fillInStackTrace());
@@ -140,35 +148,6 @@ public class TargetingService extends PaService{
 			DaoManager.close(connection);
 		}
 	}
-	
-	private void fetchAuditQueuesFromDB(){
-		Connection connection = null;
-		PreparedStatement preparedStatement = null;
-		ResultSet rs = null;
-		String query="SELECT BrandId,NumberOfThreads,QueueName FROM PricingAnalytics.dbo.Queues where Deleted = 0 and QueueType = 'AT'";
-		try{
-			connection = DaoManager.getConnection();
-			preparedStatement = connection.prepareStatement(query);
-			logger.info(preparedStatement.toString());
-			rs = preparedStatement.executeQuery();
-			while (rs.next()) {
-				Integer brandId = rs.getInt("BrandId");
-				Integer noOfThreads = rs.getInt("NumberOfThreads");
-				String queueName = "audit_queue_"+brandId;
-				if(!auditExecutorMap.containsKey(queueName)){
-					auditExecutorMap.put(brandId, Executors.newFixedThreadPool(noOfThreads));
-				}
-				auditQueueNames.add(rs.getString("QueueName"));
-			}
-		}catch(Exception ex){
-			throw new RuntimeException(ex.getMessage(), ex.fillInStackTrace());
-		}finally {
-			DaoManager.close(rs);
-			DaoManager.close(preparedStatement);
-			DaoManager.close(connection);
-		}
-	}
-
 	
 	@Override
 	public void stopService() {

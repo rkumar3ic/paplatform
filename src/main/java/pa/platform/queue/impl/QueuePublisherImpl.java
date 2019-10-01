@@ -151,9 +151,9 @@ public class QueuePublisherImpl implements QueuePublisher {
 					if (action.equalsIgnoreCase("AUDITEVENT")) {
 						Gson gson = new Gson();
 						JSONObject data = tempobj.getJSONObject("auditTrail");
-						System.out.println(data);
+						logger.debug(data);
 						AuditTrail auditTrail = gson.fromJson(data.toString(), AuditTrail.class);
-						System.out.println(auditTrail);
+						logger.debug(auditTrail);
 						event = new AuditEvent(action, brandId, auditTrail);
 					}
 					if (event != null){
